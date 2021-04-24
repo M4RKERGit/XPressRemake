@@ -17,6 +17,8 @@ public final class GeneratedPluginRegistrant {
     ShimPluginRegistry shimPluginRegistry = new ShimPluginRegistry(flutterEngine);
     flutterEngine.getPlugins().add(new xyz.luan.audioplayers.AudioplayersPlugin());
       com.github.yasukotelin.ext_storage.ExtStoragePlugin.registerWith(shimPluginRegistry.registrarFor("com.github.yasukotelin.ext_storage.ExtStoragePlugin"));
+    flutterEngine.getPlugins().add(new com.mr.flutter.plugin.filepicker.FilePickerPlugin());
+    flutterEngine.getPlugins().add(new io.flutter.plugins.flutter_plugin_android_lifecycle.FlutterAndroidLifecyclePlugin());
     flutterEngine.getPlugins().add(new dev.flutter.plugins.integration_test.IntegrationTestPlugin());
     flutterEngine.getPlugins().add(new io.flutter.plugins.pathprovider.PathProviderPlugin());
     flutterEngine.getPlugins().add(new com.baseflow.permissionhandler.PermissionHandlerPlugin());

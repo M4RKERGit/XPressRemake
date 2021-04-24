@@ -2,8 +2,8 @@
     package="com.example.guess_express">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
    <application
-        android:label="guess_express"
-        android:icon="@mipmap/ic_launcher">
+        android:label="XPress Remake"
+        android:icon="@mipmap/launcher_icon">
 
         <activity
             android:name=".MainActivity"
