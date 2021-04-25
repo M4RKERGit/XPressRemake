@@ -17,24 +17,20 @@ class GameScreen extends StatefulWidget
   _GameScreenState createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
 {
-  int _counterPos = 0;
-  int _counterNeg = 0;
-  String path = "";
-  bool started = false;
-  String result;
+  int _counterPos = 0, _counterNeg = 0, _score = 0, nowWished, record;
+  double timeCounter = 60.0;
+  String path = "", result, settingPath, _startButText = "Поехали";
+  bool started = false, playing = false, guessed = false, gameStarted = false;
   List<Track> mainList = [];
   List<FileSystemEntity> filesList = [];
   Track eT = new Track("-");
   List<Track> forButtons = [Track("-"), Track("-"), Track("-"), Track("-")];
   Random rng = new Random();
   AudioPlayer player = new AudioPlayer();
-  bool playing = false;
-  int nowWished;
   Icon pausePlayIcon = new Icon(Icons.play_arrow_rounded);
-  int _score = 0;
-
+  Timer timer;
 
   Future<String> getList()
   async
@@ -91,8 +87,7 @@ class _GameScreenState extends State<GameScreen>
     _counterPos++;
     _score = (_counterPos * 50) - (_counterNeg * 100);
     setState(()
-    {
-    });
+    {});
     _startMusic();
   }
 
@@ -104,8 +99,7 @@ class _GameScreenState extends State<GameScreen>
     _counterNeg++;
     _score = (_counterPos * 50) - (_counterNeg * 100);
     setState(()
-    {
-    });
+    {});
     _startMusic();
   }
 
@@ -123,8 +117,14 @@ class _GameScreenState extends State<GameScreen>
     super.initState();
   }
 
+  void checkTimeout()
+  {
+    if (timeCounter <= -0.1) resetGame();
+  }
+
   Future<void> _answeredFirst()
   async {
+    if (playing == false && guessed == false) return;
     if (nowWished == 0)
     {
       _incrementCounter();
@@ -134,6 +134,7 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _answeredSecond()
   async {
+    if (playing == false && guessed == false) return;
     if (nowWished == 1)
     {
       _incrementCounter();
@@ -143,6 +144,7 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _answeredThird()
   async {
+    if (playing == false && guessed == false) return;
     if (nowWished == 2)
     {
       _incrementCounter();
@@ -152,6 +154,7 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _answeredFourth()
   async {
+    if (playing == false && guessed == false) return;
     if (nowWished == 3)
     {
       _incrementCounter();
@@ -161,8 +164,6 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _startMusic() async
   {
-    if (playing == false)
-    {
       AudioPlayer.logEnabled = false;
       rngPower();
       if (forButtons[0].absPath == "-")
@@ -178,7 +179,8 @@ class _GameScreenState extends State<GameScreen>
       await player.play(curTrackPath, isLocal: true);
       playing = true;
       Timer(Duration(milliseconds: forButtons[nowWished].seekDelay), ()
-      async {
+      async
+      {
         try
         {
           final future = player.getDuration();
@@ -196,21 +198,12 @@ class _GameScreenState extends State<GameScreen>
         }
       });
       pausePlayIcon = new Icon(Icons.pause_sharp);
-    }
-    else
-    {
-      await player.stop();
-      playing = false;
-      pausePlayIcon = new Icon(Icons.play_arrow_rounded);
-      forButtons = [eT, eT, eT, eT];
-    }
-    setState(()
-    {
-    });
+      setState(() {});
   }
 
   Future<void> _changeDir()
   async {
+    resetGame();
     path = await FilePicker.platform.getDirectoryPath();
     if (path == "/" || path == null) path = await ExtStorage.getExternalStoragePublicDirectory(ExtStorage.DIRECTORY_DOWNLOADS);
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
@@ -219,7 +212,63 @@ class _GameScreenState extends State<GameScreen>
     getList();
   }
 
+  void _pauseUnpause()
+  {
+    if (playing)
+      {
+        player.pause();
+        playing = false;
+        pausePlayIcon = new Icon(Icons.play_arrow_rounded);
+        setState(() {});
+      }
+    else
+      {
+        player.resume();
+        playing = true;
+        pausePlayIcon = new Icon(Icons.pause_sharp);
+        setState(() {});
+      }
+  }
 
+  void _newGame()
+  {
+    gameStarted = true;
+    _startButText = "Рестарт";
+    timer = Timer.periodic(Duration(milliseconds: 100), (timer)
+    {
+      timeCounter -= 0.1;
+      checkTimeout();
+      setState(() {});
+    });
+    _startMusic();
+  }
+
+  void resetGame()
+  {
+    if (!gameStarted)
+    {
+      _newGame();
+      return;
+    }
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    SnackBar snackBar = new SnackBar(content: Text('Ты набил $_score очков'));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    timer.cancel();
+    timeCounter = 60.0;
+    player.stop();
+    gameStarted = false;
+    playing = false;
+    _score = 0;
+    _startButText = "Поехали";
+    forButtons = [eT, eT, eT, eT];
+    setState(() {});
+  }
+
+  @override
+  void dispose()
+  {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -228,24 +277,33 @@ class _GameScreenState extends State<GameScreen>
         title: Text('Nokia XPress Remake'),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          //image: DecorationImage(image: AssetImage("assets/background.png"), fit: BoxFit.cover),
-        ),
         child: Column(
           children: <Widget>[
-            Text(
-              'Score: $_score',
+            Text
+              (
+              'Очки: $_score',
+              style: Theme.of(context).textTheme.headline4,
+            ),Text
+              (
+              'Время: ' + timeCounter.toStringAsFixed(1),
               style: Theme.of(context).textTheme.headline4,
             ),
             Container(
               alignment: Alignment.center,
-              padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(
                 children: <Widget>[
                   ElevatedButton(onPressed: _answeredFirst, child: Text(forButtons[0].naming, textAlign: TextAlign.center)),
                   ElevatedButton(onPressed: _answeredSecond, child: Text(forButtons[1].naming, textAlign: TextAlign.center)),
                   ElevatedButton(onPressed: _answeredThird, child: Text(forButtons[2].naming, textAlign: TextAlign.center)),
-                  ElevatedButton(onPressed: _answeredFourth, child: Text(forButtons[3].naming, textAlign: TextAlign.center))
+                  ElevatedButton(onPressed: _answeredFourth, child: Text(forButtons[3].naming, textAlign: TextAlign.center)),
+                  Container(
+                      child: Column(
+                        children: <Widget>[
+                         CircularProgressIndicator(value: timeCounter/60)
+                      ]
+                    )
+                  )
                 ],
               ),
             ),
@@ -257,14 +315,21 @@ class _GameScreenState extends State<GameScreen>
                   ElevatedButton(onPressed: _changeDir, child: Icon(Icons.storage)),
                   Container(
                       padding: const EdgeInsets.fromLTRB(250, 0, 0, 0),
-                      child: ElevatedButton(onPressed: _startMusic, child: pausePlayIcon)
+                      child: ElevatedButton(onPressed: _pauseUnpause, child: pausePlayIcon)
                   )
                 ],
               ),
             ),
+            Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.fromLTRB(0, 100, 0, 0),
+                child: Column(
+                    children: <Widget>[(ElevatedButton(onPressed: resetGame, child: Text('$_startButText', textAlign: TextAlign.center)))]
+                )
+            )
           ],
         ),
-      ),
+        ),
     );
   }
 }

@@ -27,9 +27,6 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(title: Text('Nokia XPress Remake')),
       body: Container
         (
-          decoration: BoxDecoration(
-            //image: DecorationImage(image: AssetImage("assets/background.png"), fit: BoxFit.cover),
-          ),
           child: Column
             (
               children:

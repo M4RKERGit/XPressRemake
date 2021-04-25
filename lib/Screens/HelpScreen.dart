@@ -35,7 +35,7 @@ class _HelpScreenState extends State<HelpScreen>
       "сейчас песни.\n\n"
       "Правильный ответ приносит тебе 50 баллов, "
       "неправильный - 100\n\n"
-      "Викторина бесконечна, так что желаю удачи!";
+      "Один раунд длится ровно минуту, так что поторопись!";
 
 
   @override
@@ -57,7 +57,9 @@ class _HelpScreenState extends State<HelpScreen>
             (
               children: <Widget>
                 [
-                  Text('$_text', textAlign: TextAlign.center)
+                  Text('$_text', textAlign: TextAlign.center),
+                Image.asset("assets/flutter.png"),
+                Image.asset("dart.png"),
                 ]
             )
       )

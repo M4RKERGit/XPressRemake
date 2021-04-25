@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import "Screens/HomeScreen.dart";
+import 'Screens/HomeScreen.dart';
 import 'Screens/GameScreen.dart';
 import 'Screens/HelpScreen.dart';
 
 
 void main() {
   runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
     title: 'Nokia XPress Remake',
     initialRoute: '/',
     routes:
