@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'Screens/HomeScreen.dart';
 import 'Screens/GameScreen.dart';
 import 'Screens/HelpScreen.dart';
+import 'Screens/RecordsScreen.dart';
 
 
 void main() {
@@ -14,6 +15,7 @@ void main() {
     {
       '/': (BuildContext context) => HomeScreen(),
       '/game': (BuildContext context) => GameScreen(),
+      '/records': (BuildContext context) => RecordsScreen(),
       '/help': (BuildContext context) => HelpScreen(),
     },
     theme: ThemeData(

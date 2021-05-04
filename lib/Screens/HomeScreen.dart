@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,6 +23,10 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context)
   {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return Scaffold
       (
       appBar: AppBar(title: Text('Nokia XPress Remake')),
@@ -37,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Column(
                     children: <Widget>[
                       ElevatedButton(onPressed: (){Navigator.pushNamed(context, '/game');}, child: Text('Начать новую игру')),
-                      ElevatedButton(onPressed: (){Navigator.pushNamed(context, '/game');}, child: Text('Рекорды')),
+                      ElevatedButton(onPressed: (){Navigator.pushNamed(context, '/records');}, child: Text('Рекорды')),
                       ElevatedButton(onPressed: (){Navigator.pushNamed(context, '/help');}, child: Text('Справка')),
                       ElevatedButton(onPressed: (){launch('https://t.me/Miku_Tyan');}, child: Text('Связь с автором'))
                         ]

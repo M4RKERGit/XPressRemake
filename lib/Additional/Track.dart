@@ -15,7 +15,12 @@ class Track {
         return;
       }
     this.absPath = absPath;
-    this.naming = absPath.split("/")[absPath.split("/").length - 1].split(".")[0];
+    String buf = "";
+    for (int i = 0; i < absPath.split("/")[absPath.split("/").length - 1].split(".").length - 1; i++)
+    {
+        buf += absPath.split("/")[absPath.split("/").length - 1].split(".")[i];
+    }
+    this.naming = buf;
     this.format = absPath.split(".")[absPath.split(".").length - 1];
     switch (format)
     {

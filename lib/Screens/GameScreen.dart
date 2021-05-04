@@ -1,13 +1,17 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
+import 'package:flutter/services.dart';
+
 import '/Additional/Track.dart';
+import '/Additional/UtilFuncs.dart';
 
 import 'package:flutter/material.dart';
 import 'package:ext_storage/ext_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameScreen extends StatefulWidget
 {
@@ -17,7 +21,7 @@ class GameScreen extends StatefulWidget
   _GameScreenState createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin
 {
   int _counterPos = 0, _counterNeg = 0, _score = 0, nowWished, record;
   double timeCounter = 60.0;
@@ -31,6 +35,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
   AudioPlayer player = new AudioPlayer();
   Icon pausePlayIcon = new Icon(Icons.play_arrow_rounded);
   Timer timer;
+  Animation<double> animation;
+  AnimationController controller;
 
   Future<String> getList()
   async
@@ -59,7 +65,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
     for (int i = 0; i < filesList.length; i++)
     {
       List<String> buf = filesList[i].path.toString().split(".");
-      if (buf[buf.length-1] == "mp3" || buf[buf.length-1] == "flac")
+      if (buf[buf.length-1] == "mp3")
       {
         mainList.add( Track(filesList[i].path.toString()) );
       }
@@ -115,6 +121,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
     requestPermission();
     getList();
     super.initState();
+    controller = AnimationController(duration: const Duration(seconds: 300), vsync: this);
+    animation = Tween<double>(begin: 0, end: 360).animate(controller)..addListener(() {setState(() {});});
+    controller.forward();
   }
 
   void checkTimeout()
@@ -241,6 +250,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
       setState(() {});
     });
     _startMusic();
+    controller.reset();
+    controller.forward();
   }
 
   void resetGame()
@@ -253,12 +264,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
     SnackBar snackBar = new SnackBar(content: Text('Ты набил $_score очков'));
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    checkRecords();
     timer.cancel();
     timeCounter = 60.0;
     player.stop();
     gameStarted = false;
     playing = false;
-    _score = 0;
     _startButText = "Поехали";
     forButtons = [eT, eT, eT, eT];
     setState(() {});
@@ -267,11 +278,40 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
   @override
   void dispose()
   {
+    controller.dispose();
     super.dispose();
+  }
+
+  Future<void> checkRecords()
+  async
+  {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<int> recList = [0, 0, 0, 0, 0];
+    recList[0] = prefs.getInt("Rec1");
+    recList[1] = prefs.getInt("Rec2");
+    recList[2] = prefs.getInt("Rec3");
+    recList[3] = prefs.getInt("Rec4");
+    recList[4] = prefs.getInt("Rec5");
+    for (int i = 0; i < recList.length; i++)
+      {
+        if (recList[i] == null) recList[i] = 0;
+      }
+    recList = UtilFuncs.putRec(recList, _score);
+    prefs.setInt("Rec1", recList[0]);
+    prefs.setInt("Rec2", recList[1]);
+    prefs.setInt("Rec3", recList[2]);
+    prefs.setInt("Rec4", recList[3]);
+    prefs.setInt("Rec5", recList[4]);
+    _score = 0;
+    return;
   }
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return Scaffold(
       appBar: AppBar(
         title: Text('Nokia XPress Remake'),
@@ -300,33 +340,43 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin
                   Container(
                       child: Column(
                         children: <Widget>[
-                         CircularProgressIndicator(value: timeCounter/60)
+                          Container(
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.fromLTRB(0, 100, 0, 0),
+                            child: Stack(
+                              children: <Widget>[
+                                ElevatedButton(onPressed: _changeDir, child: Icon(Icons.storage)),
+                                Container(
+                                  padding: const EdgeInsets.fromLTRB(140, 0, 0, 0),
+                                  child: Column(
+                                    children: <Widget>[
+                                      Transform.rotate(
+                                        angle: animation.value,
+                                        child: CircularProgressIndicator(strokeWidth: 50, value: timeCounter/60),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                    padding: const EdgeInsets.fromLTRB(250, 0, 0, 0),
+                                    child: ElevatedButton(onPressed: _pauseUnpause, child: pausePlayIcon)
+                                )
+                              ],
+                            ),
+                          ),
+                          Container(
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.fromLTRB(0, 100, 0, 0),
+                              child: Column(
+                                  children: <Widget>[(ElevatedButton(onPressed: resetGame, child: Text('$_startButText', textAlign: TextAlign.center)))]
+                              )
+                          )
                       ]
                     )
                   )
                 ],
               ),
             ),
-            Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.fromLTRB(0, 100, 0, 0),
-              child: Stack(
-                children: <Widget>[
-                  ElevatedButton(onPressed: _changeDir, child: Icon(Icons.storage)),
-                  Container(
-                      padding: const EdgeInsets.fromLTRB(250, 0, 0, 0),
-                      child: ElevatedButton(onPressed: _pauseUnpause, child: pausePlayIcon)
-                  )
-                ],
-              ),
-            ),
-            Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.fromLTRB(0, 100, 0, 0),
-                child: Column(
-                    children: <Widget>[(ElevatedButton(onPressed: resetGame, child: Text('$_startButText', textAlign: TextAlign.center)))]
-                )
-            )
           ],
         ),
         ),

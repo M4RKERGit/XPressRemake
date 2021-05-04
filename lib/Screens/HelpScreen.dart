@@ -1,5 +1,8 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HelpScreen extends StatefulWidget
 {
@@ -16,9 +19,7 @@ class _HelpScreenState extends State<HelpScreen>
   {
     super.initState();
   }
-
   double curWidth, curHeight;
-
 
   String _text = "Привет!\n\n"
       "Это небольшое приложение - ремейк "
@@ -28,7 +29,7 @@ class _HelpScreenState extends State<HelpScreen>
       "после начала новой игры нажми на значок "
       "с символом списка\n\n"
       "Затем выбери любую папку с твоей музыкой "
-      "(поддерживается flac, mp3)\n\n"
+      "(поддерживается mp3)\n\n"
       "После выбора папки при нажатии на кнопку "
       "PLAY начнётся игра\n\n"
       "Твоя задача - угадывать название играющей "
@@ -43,6 +44,10 @@ class _HelpScreenState extends State<HelpScreen>
   {
     curWidth = MediaQuery.of(context).size.width;
     curHeight = MediaQuery.of(context).size.height;
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return Scaffold
       (
       appBar: AppBar(title: Text('Справка ' + '$curWidth' + '/' + '$curHeight')),
@@ -58,8 +63,19 @@ class _HelpScreenState extends State<HelpScreen>
               children: <Widget>
                 [
                   Text('$_text', textAlign: TextAlign.center),
-                Image.asset("assets/flutter.png"),
-                Image.asset("dart.png"),
+                  Container
+                    (
+                      padding: const EdgeInsets.fromLTRB(0, 70, 0, 0),
+                      child: Row
+                        (
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>
+                          [
+                            Text('Powered By:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            Flexible(child: Image.asset("assets/flutter.png", width: 150, height: 80), flex: 0)
+                          ]
+                      )
+                    )
                 ]
             )
       )
